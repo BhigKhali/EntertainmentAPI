@@ -4,18 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Adding services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Load JWT settings from configuration
+// Loading JWT settings from configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.AddSingleton(new JwtTokenHelper(
     jwtSettings["Key"],
     jwtSettings["Issuer"],
     jwtSettings["Audience"],
-    int.Parse(jwtSettings["ExpiryMinutes"])  // Pass expiry time
+    int.Parse(jwtSettings["ExpiryMinutes"])  // Pass expiry time for token during
 ));
 
 
@@ -24,14 +24,14 @@ builder.Services.AddDbContext<EntertainmentDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 var app = builder.Build();
 
-// Use custom JWT authentication middleware (if any other middleware is present, ensure it's correctly ordered)
+// Use custom JWT authentication middleware (jwtBearer package not compatible with asp.net 8)
 app.UseMiddleware<JwtAuthenticationMiddleware>();
 
 // Enable middleware for authentication and authorization
-app.UseAuthentication();  // This should be called before app.UseAuthorization()
+app.UseAuthentication();  
 app.UseAuthorization();
 
-// Swagger and other middlewares (development specific)
+// Swagger and other middlewares
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

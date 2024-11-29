@@ -1,4 +1,4 @@
-﻿using EntertainmentAPI.Utilities; // For JwtTokenHelper
+﻿using EntertainmentAPI.Utilities; // For JwtTokenHelper fie
 using Microsoft.AspNetCore.Mvc;
 
 namespace EntertainmentAPI.Controllers
@@ -18,7 +18,7 @@ namespace EntertainmentAPI.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest loginRequest)
         {
-            // Validate user credentials (for demo purposes, these are hardcoded)
+            // Validate user credentials (for testing i will have them hard coded but will change overtime)
             if (loginRequest.Username == "admin" && loginRequest.Password == "password")
             {
                 var token = _jwtHelper.GenerateToken(loginRequest.Username);

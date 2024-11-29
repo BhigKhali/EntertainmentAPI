@@ -24,7 +24,7 @@ public class JwtTokenHelper
     {
         var claims = new[] {
             new Claim(ClaimTypes.Name, username),
-            // Add more claims as necessary
+            
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
