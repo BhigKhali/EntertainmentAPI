@@ -8,81 +8,76 @@ using System.Threading.Tasks;
 
 namespace EntertainmentAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class TicketController : ControllerBase
+    [Route("api/[controller]")]
+    public class TicketsController : ControllerBase
     {
         private readonly EntertainmentDbContext _context;
 
-        public TicketController(EntertainmentDbContext context)
+        public TicketsController(EntertainmentDbContext context)
         {
             _context = context;
         }
 
-        // GET: api/Event
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
-        {
-            return await _context.Events.ToListAsync();
-        }
-
-        // GET: api/Event/{eventId}
-        [HttpGet("{eventId}")]
-        public async Task<ActionResult<Event>> GetEvent(int eventId)
-        {
-            var evnt = await _context.Events.FindAsync(eventId);
-            if (evnt == null) return NotFound();
-
-            return evnt;
-        }
-
-        // POST: api/Event
+        // Create Ticket
         [HttpPost]
-        public async Task<ActionResult<Event>> PostEvent(Event evnt)
+        public async Task<ActionResult<Ticket>> CreateTicket(Ticket ticket)
         {
-            _context.Events.Add(evnt);
+            _context.Tickets.Add(ticket);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetEvent), new { eventId = evnt.EventId }, evnt);
+            return CreatedAtAction(nameof(GetTicket), new { id = ticket.TicketId }, ticket);
         }
 
-        // PUT: api/Event/{eventId}
-        [HttpPut("{eventId}")]
-        public async Task<IActionResult> PutEvent(int eventId, Event evnt)
+        // Get all Tickets
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Ticket>>> GetTickets()
         {
-            if (eventId != evnt.EventId) return BadRequest();
+            return await _context.Tickets.ToListAsync();
+        }
 
-            _context.Entry(evnt).State = EntityState.Modified;
+        // Get a single Ticket
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Ticket>> GetTicket(int id)
+        {
+            var ticket = await _context.Tickets.FindAsync(id);
 
-            try
+            if (ticket == null)
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
+
+            return ticket;
+        }
+
+        // Update Ticket
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTicket(int id, Ticket ticket)
+        {
+            if (id != ticket.TicketId)
             {
-                if (!EventExists(eventId)) return NotFound();
-                else throw;
+                return BadRequest();
             }
+
+            _context.Entry(ticket).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/Event/{eventId}
-        [HttpDelete("{eventId}")]
-        public async Task<IActionResult> DeleteEvent(int eventId)
+        // Delete Ticket
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTicket(int id)
         {
-            var evnt = await _context.Events.FindAsync(eventId);
-            if (evnt == null) return NotFound();
+            var ticket = await _context.Tickets.FindAsync(id);
+            if (ticket == null)
+            {
+                return NotFound();
+            }
 
-            _context.Events.Remove(evnt);
+            _context.Tickets.Remove(ticket);
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool EventExists(int eventId)
-        {
-            return _context.Events.Any(e => e.EventId == eventId);
         }
     }
 }

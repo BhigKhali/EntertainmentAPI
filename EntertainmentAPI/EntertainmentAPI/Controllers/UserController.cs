@@ -1,88 +1,98 @@
 ﻿using EntertainmentAPI.Data;
 using EntertainmentAPI.Models;
+using EntertainmentAPI.Models.DTOs;  // Importinf the DTOs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EntertainmentAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    [Route("api/[controller]")]
+    public class UsersController : ControllerBase
     {
         private readonly EntertainmentDbContext _context;
 
-        public UserController(EntertainmentDbContext context)
+        public UsersController(EntertainmentDbContext context)
         {
             _context = context;
         }
 
-        // GET: api/Event
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
-        {
-            return await _context.Events.ToListAsync();
-        }
-
-        // GET: api/Event/{eventId}
-        [HttpGet("{eventId}")]
-        public async Task<ActionResult<Event>> GetEvent(int eventId)
-        {
-            var evnt = await _context.Events.FindAsync(eventId);
-            if (evnt == null) return NotFound();
-
-            return evnt;
-        }
-
-        // POST: api/Event
+        // Create User (Using DTO for creat usrr)
         [HttpPost]
-        public async Task<ActionResult<Event>> PostEvent(Event evnt)
+        public async Task<ActionResult<User>> CreateUser(UserCreateDTO userCreateDTO)
         {
-            _context.Events.Add(evnt);
-            await _context.SaveChangesAsync();
+            var user = new User
+            {
+                Name = userCreateDTO.Name,
+                Email = userCreateDTO.Email,
+                PasswordHash = userCreateDTO.PasswordHash
+            };
 
-            return CreatedAtAction(nameof(GetEvent), new { eventId = evnt.EventId }, evnt);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, user);
         }
 
-        // PUT: api/Event/{eventId}
-        [HttpPut("{eventId}")]
-        public async Task<IActionResult> PutEvent(int eventId, Event evnt)
+        // Get all Users
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            if (eventId != evnt.EventId) return BadRequest();
+            return await _context.Users.ToListAsync();
+        }
 
-            _context.Entry(evnt).State = EntityState.Modified;
+        // Get a single User
+        [HttpGet("{id}")]
+        public async Task<ActionResult<User>> GetUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
 
-            try
+            if (user == null)
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
+
+            return user;
+        }
+
+        // Update User (Using DTO for update user)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, UserUpdateDTO userUpdateDTO)
+        {
+            if (id != userUpdateDTO.UserId)
             {
-                if (!EventExists(eventId)) return NotFound();
-                else throw;
+                return BadRequest();
             }
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            user.Name = userUpdateDTO.Name;
+            user.Email = userUpdateDTO.Email;
+            user.PasswordHash = userUpdateDTO.PasswordHash;
+
+            _context.Entry(user).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/Event/{eventId}
-        [HttpDelete("{eventId}")]
-        public async Task<IActionResult> DeleteEvent(int eventId)
+        // Delete User
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var evnt = await _context.Events.FindAsync(eventId);
-            if (evnt == null) return NotFound();
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
 
-            _context.Events.Remove(evnt);
+            _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool EventExists(int eventId)
-        {
-            return _context.Events.Any(e => e.EventId == eventId);
         }
     }
 }
