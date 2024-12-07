@@ -1,5 +1,6 @@
 ﻿using EntertainmentAPI.Data;
 using EntertainmentAPI.Models;
+using EntertainmentAPI.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -38,8 +39,15 @@ namespace EntertainmentAPI.Controllers
 
         // POST: api/Event
         [HttpPost]
-        public async Task<ActionResult<Event>> PostEvent(Event evnt)
+        public async Task<ActionResult<Event>> PostEvent(EventCreateDTO eventCreateDTO)
         {
+            var evnt = new Event
+            {
+                Name = eventCreateDTO.Name,
+                Description = eventCreateDTO.Description,
+                Date = eventCreateDTO.Date
+            };
+
             _context.Events.Add(evnt);
             await _context.SaveChangesAsync();
 
@@ -48,11 +56,23 @@ namespace EntertainmentAPI.Controllers
 
         // PUT: api/Event/{eventId}
         [HttpPut("{eventId}")]
-        public async Task<IActionResult> PutEvent(int eventId, Event evnt)
+        public async Task<IActionResult> PutEvent(int eventId, EventUpdateDTO eventUpdateDTO)
         {
-            if (eventId != evnt.EventId) return BadRequest();
+            if (eventId != eventUpdateDTO.EventId)
+            {
+                return BadRequest("Event ID in the URL does not match the body.");
+            }
 
-            _context.Entry(evnt).State = EntityState.Modified;
+            var existingEvent = await _context.Events.FindAsync(eventId);
+            if (existingEvent == null)
+            {
+                return NotFound();
+            }
+
+            // Map properties from DTO to the existing entity
+            existingEvent.Name = eventUpdateDTO.Name;
+            existingEvent.Description = eventUpdateDTO.Description;
+            existingEvent.Date = eventUpdateDTO.Date;
 
             try
             {
@@ -60,8 +80,14 @@ namespace EntertainmentAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!EventExists(eventId)) return NotFound();
-                else throw;
+                if (!EventExists(eventId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
             }
 
             return NoContent();

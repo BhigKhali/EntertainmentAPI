@@ -1,7 +1,9 @@
 ﻿using EntertainmentAPI.Data;
 using EntertainmentAPI.Models;
+using EntertainmentAPI.Models.DTOs;  
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,12 +21,20 @@ namespace EntertainmentAPI.Controllers
             _context = context;
         }
 
-        // Create Ticket
+        // Create Ticket (Using DTO)
         [HttpPost]
-        public async Task<ActionResult<Ticket>> CreateTicket(Ticket ticket)
+        public async Task<ActionResult<Ticket>> CreateTicket(TicketCreateDTO ticketCreateDTO)
         {
+            var ticket = new Ticket
+            {
+                EventId = ticketCreateDTO.EventId,
+                UserId = ticketCreateDTO.UserId,
+                PurchaseDate = DateTime.UtcNow
+            };
+
             _context.Tickets.Add(ticket);
             await _context.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetTicket), new { id = ticket.TicketId }, ticket);
         }
 
@@ -49,14 +59,24 @@ namespace EntertainmentAPI.Controllers
             return ticket;
         }
 
-        // Update Ticket
+        // Update Ticket (Using DTO)
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTicket(int id, Ticket ticket)
+        public async Task<IActionResult> UpdateTicket(int id, TicketUpdateDTO ticketUpdateDTO)
         {
-            if (id != ticket.TicketId)
+            if (id != ticketUpdateDTO.TicketId)
             {
                 return BadRequest();
             }
+
+            var ticket = await _context.Tickets.FindAsync(id);
+            if (ticket == null)
+            {
+                return NotFound();
+            }
+
+            ticket.EventId = ticketUpdateDTO.EventId;
+            ticket.UserId = ticketUpdateDTO.UserId;
+            ticket.PurchaseDate = ticketUpdateDTO.PurchaseDate;
 
             _context.Entry(ticket).State = EntityState.Modified;
             await _context.SaveChangesAsync();

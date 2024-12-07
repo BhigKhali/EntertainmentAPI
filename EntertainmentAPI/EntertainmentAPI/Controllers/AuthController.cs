@@ -1,5 +1,10 @@
-﻿using EntertainmentAPI.Utilities; // For JwtTokenHelper fie
+﻿using EntertainmentAPI.Data; // For DbContext
+using EntertainmentAPI.Models; // For User model
+using EntertainmentAPI.Utilities; // For JwtTokenHelper
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; // For async DB operations
+using System.Linq;
 
 namespace EntertainmentAPI.Controllers
 {
@@ -8,25 +13,28 @@ namespace EntertainmentAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly JwtTokenHelper _jwtHelper;
+        private readonly EntertainmentDbContext _context;
 
-        public AuthController(JwtTokenHelper jwtHelper)
+        public AuthController(JwtTokenHelper jwtHelper, EntertainmentDbContext context)
         {
             _jwtHelper = jwtHelper;
+            _context = context;
         }
 
         // POST: api/Auth/login
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest loginRequest)
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         {
-            // Validate user credentials (for testing i will have them hard coded but will change overtime)
-            if (loginRequest.Username == "admin" && loginRequest.Password == "password")
-            {
-                var token = _jwtHelper.GenerateToken(loginRequest.Username);
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == loginDTO.Email);
 
-                return Ok(new { Token = token });
+            if (user == null || !PasswordHelper.VerifyPassword(loginDTO.Password, user.PasswordHash))
+            {
+                return Unauthorized("Invalid credentials");
             }
 
-            return Unauthorized(new { Message = "Invalid credentials" });
+            // Generate token if credentials are valid
+            var token = _jwtHelper.GenerateToken(user.Email);
+            return Ok(new { Token = token });
         }
     }
 
