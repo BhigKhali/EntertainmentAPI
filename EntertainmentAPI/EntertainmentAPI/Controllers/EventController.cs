@@ -1,6 +1,7 @@
 ﻿using EntertainmentAPI.Data;
 using EntertainmentAPI.Models;
 using EntertainmentAPI.Models.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace EntertainmentAPI.Controllers
         }
 
         // GET: api/Event
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Event>>> GetEvents()
         {

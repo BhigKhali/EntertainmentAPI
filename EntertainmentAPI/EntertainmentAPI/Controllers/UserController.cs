@@ -22,6 +22,14 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<User>> CreateUser(UserCreateDTO userCreateDTO)
     {
+        // Check if the email already exists in the database
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == userCreateDTO.Email);
+        if (existingUser != null)
+        {
+            // Return a status code with a descriptive error message
+            return Conflict(new { Message = "A user with this email already exists." });
+        }
+
         // Hash the password before saving to the database
         var hashedPassword = PasswordHelper.HashPassword(userCreateDTO.PasswordHash);
 
@@ -36,6 +44,7 @@ public class UsersController : ControllerBase
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, user);
     }
+
     // Get all Users (Accessible by Admins only)
     [HttpGet]
    // [Authorize(Roles = "Admin")] will do that subsequently just did to test
